@@ -3,13 +3,13 @@ package model;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class Truck extends AbstractVehicle{
+public class Car extends AbstractVehicle{
 
 
-    public Truck(int myX, int myY, Direction myDir ) {
+    public Car(int myX, int myY, Direction myDir ) {
         super(myX, myY, myDir);
-        imageLocation = "truck.gif";
-        straightDriver = 40;
+        imageLocation = "car.gif";
+        straightDriver = 100;
 
     }
 
@@ -26,10 +26,18 @@ public class Truck extends AbstractVehicle{
     @Override
     public boolean canPass(Terrain theTerrain, Light theLight) {
         if(theTerrain.equals(Terrain.STREET) || theTerrain.equals(Terrain.LIGHT) || theTerrain.equals(Terrain.CROSSWALK)) {
-            return !theTerrain.equals(Terrain.CROSSWALK) || !theLight.equals(Light.RED);
+            if (theTerrain.equals(Terrain.LIGHT) && theLight.equals(Light.RED)) {
+
+                return false;
+            }
+            if (theTerrain.equals(Terrain.CROSSWALK) && (theLight.equals(Light.RED) ||theLight.equals(Light.YELLOW))) {
+                return false;
+            }
+            return true;
         }
 
         return false;
+
     }
 
     /**
@@ -41,6 +49,7 @@ public class Truck extends AbstractVehicle{
      */
     @Override
     public Direction chooseDirection(Map<Direction, Terrain> theNeighbors) {
+        Direction myHeadingDirection = myDirection;
         Terrain myTerrain;
         ArrayList<Direction> possibleDirections = new ArrayList<>();
 
@@ -53,42 +62,45 @@ public class Truck extends AbstractVehicle{
         }
         //East
         myTerrain = theNeighbors.get(Direction.EAST);
-        if (myTerrain.equals(Terrain.STREET) || myTerrain.equals(Terrain.CROSSWALK)|| myTerrain.equals(Terrain.LIGHT)) {
+        if (myTerrain.equals(Terrain.STREET) || myTerrain.equals(Terrain.CROSSWALK) || myTerrain.equals(Terrain.LIGHT)) {
             possibleDirections.add(Direction.EAST);
 
         }
         //South
         myTerrain = theNeighbors.get(Direction.SOUTH);
-        if (myTerrain.equals(Terrain.STREET) || myTerrain.equals(Terrain.CROSSWALK)|| myTerrain.equals(Terrain.LIGHT)) {
+        if (myTerrain.equals(Terrain.STREET) || myTerrain.equals(Terrain.CROSSWALK) || myTerrain.equals(Terrain.LIGHT)) {
             possibleDirections.add(Direction.SOUTH);
 
         }
         //West
         myTerrain = theNeighbors.get(Direction.WEST);
-        if (myTerrain.equals(Terrain.STREET) || myTerrain.equals(Terrain.CROSSWALK)|| myTerrain.equals(Terrain.LIGHT)) {
+        if (myTerrain.equals(Terrain.STREET) || myTerrain.equals(Terrain.CROSSWALK) || myTerrain.equals(Terrain.LIGHT)) {
             possibleDirections.add(Direction.WEST);
 
         }
         int randomDirection = this.myRandom.nextInt(possibleDirections.size());
 
-        if(possibleDirections.size()==0) {
-            return myDirection.reverse();
-        }
-
         if (possibleDirections.contains(myDirection)) {
 
             //Chances of turning instead of going straight
             if (this.myRandom.nextInt(straightDriver) <= 5) {
-                if (this.myRandom.nextInt(10) <= 5) {
-                    return possibleDirections.get(randomDirection).left();
-                } else {
-                    return possibleDirections.get(randomDirection).right();
+                if (canPass(theNeighbors.get(myDirection.left()), Light.GREEN)) {
+                    myHeadingDirection =  myDirection.left();
+                } else if (canPass(theNeighbors.get(myDirection.right()), Light.GREEN)) {
+                    myHeadingDirection =  myDirection.right();
                 }
             }
-                return myDirection;
+            return myHeadingDirection;
+        } else {
+            if (canPass(theNeighbors.get(myDirection.left()), Light.GREEN)) {
+                myHeadingDirection =  myDirection.left();
+            } else if (canPass(theNeighbors.get(myDirection.right()), Light.GREEN)) {
+                myHeadingDirection =  myDirection.right();
+            } else {
+                myHeadingDirection = myDirection.reverse();
+            }
         }
-        return possibleDirections.get(randomDirection);
-
+        return myHeadingDirection;
     }
 
     /**
@@ -98,7 +110,11 @@ public class Truck extends AbstractVehicle{
      */
     @Override
     public void collide(Vehicle theOther) {
-        System.out.println("Truck collided");
+        if (theOther.isAlive()) {
+            imageLocation = "car_dead.gif";
+            myRevivalTime = 15;
+            alive = false;
+        }
     }
 
     /**
@@ -169,6 +185,10 @@ public class Truck extends AbstractVehicle{
      */
     @Override
     public void poke() {
+        if (myRevivalTime == 0 && !isAlive()) {
+            imageLocation = "car.gif";
+            alive = true;
+        }
         myRevivalTime--;
 
     }

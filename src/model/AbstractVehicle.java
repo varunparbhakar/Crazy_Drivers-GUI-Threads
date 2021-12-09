@@ -1,25 +1,38 @@
 package model;
 
 import java.awt.Image;
-import java.util.Map;
 import java.util.Random;
 
+
 abstract class AbstractVehicle implements Vehicle {
-    private Image myVehicleImage;
-    protected int myX;
-    protected int myY;
-    protected boolean alive;
+    protected String imageLocation;
     protected Random myRandom = new Random();
+    protected int myCurrentLocationX;
+    protected int myCurrentLocationY;
+    protected int myDefaultLocationX;
+    protected int myDefaultLocationY;
+    protected boolean alive;
     protected Direction myDirection;
     protected int myRevivalTime;
-    AbstractVehicle() {
+    //The higher the number the more straight it drives
+    protected int straightDriver;
+
+    AbstractVehicle(int myX, int myY, Direction theDir ) {
+        myDefaultLocationX  = myX;
+        myDefaultLocationY = myY;
+        myCurrentLocationX = myDefaultLocationX;
+        myCurrentLocationY = myDefaultLocationY;
+        myDirection = theDir;
         alive = true;
-        myDirection = Direction.random();
-        myRevivalTime = 0;
+
+
 
     }
-
-
-    //////
-
+    protected void resetLocation(){
+        myCurrentLocationX = myDefaultLocationX;
+        myCurrentLocationY = myDefaultLocationY;
+    }
+    protected void crashed() {
+        alive = false;
+    }
 }
